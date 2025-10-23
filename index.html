@@ -200,11 +200,15 @@
     }
   </style>
   <script>
-    // Extract params from the current URL
-    // incoming url:https://errows.online/?pixel=752314737858834
+    // Extract all params from the current URL
+    // incoming url: https://errows.online/?s=&c=c1&g=&ad=&acc=&pixel=803742088964629
     const params = new URLSearchParams(window.location.search);
-    const pixel = params.get('pixel');
-    // const imgParam = params.get('img'); 
+    const s = params.get('s');
+    const c = params.get('c');
+    const g = params.get('g');
+    const ad = params.get('ad');
+    const acc = params.get('acc');
+    const pixel = params.get('pixel'); 
 
     // Device Detection Functions
     function isMobile() {
@@ -248,12 +252,20 @@
     // Get device information
     const deviceInfo = getDeviceInfo();
     
-    // Log device info for debugging (remove in production)
+    // Log device info and parameters for debugging (remove in production)
     console.log('Device Info:', deviceInfo);
+    console.log('Extracted Parameters:', { s, c, g, ad, acc, pixel });
+    console.log('Target URL:', target);
     
-  // Build the target URL with pixel and device type only
-  const target = 'https://errows.ai/?pixel=' + encodeURIComponent(pixel || '') +
-          '&device=' + (deviceInfo.isMobile ? 'mobile' : 'desktop');
+  // Build the target URL with all parameters
+  const target = 'https://errows.ai/?' + 
+    's=' + encodeURIComponent(s || '') +
+    '&c=' + encodeURIComponent(c || '') +
+    '&g=' + encodeURIComponent(g || '') +
+    '&ad=' + encodeURIComponent(ad || '') +
+    '&acc=' + encodeURIComponent(acc || '') +
+    '&pixel=' + encodeURIComponent(pixel || '') +
+    '&device=' + (deviceInfo.isMobile ? 'mobile' : 'desktop');
     
     // The redirect will be triggered after a timeout or on image click (see script in body)
   </script>
