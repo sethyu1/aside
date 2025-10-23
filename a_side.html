@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Redirecting...</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #000;
+      overflow: hidden;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Make container fill the entire viewport */
+    .container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      overflow: hidden;
+    }
+
+    /* Image wrapper covers the entire viewport */
+    .image-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    /* Make the image cover the entire viewport */
+    #displayImage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      display: block;
+      /* Performance optimizations */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      will-change: transform;
+      /* Image quality optimizations */
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      /* Prevent image dragging and selection */
+      -webkit-user-drag: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
+      user-drag: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      transition: opacity 0.3s ease;
+      pointer-events: none; /* allow clicks to pass through once hidden */
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+
+    /* Universal Mobile Strategy - Works on ALL mobile devices */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+        height: -webkit-fill-available; /* iOS Safari fix */
+        height: 100dvh; /* Modern browsers */
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+      }
+      
+      .container {
+        height: 100vh;
+        height: -webkit-fill-available;
+        height: 100dvh;
+      }
+      
+      #displayImage {
+        object-fit: cover;
+        object-position: center center;
+        width: 100%;
+        height: 100%;
+        /* Universal mobile optimizations */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        /* Prevent zoom on double-tap */
+        touch-action: manipulation;
+      }
+    }
+
+
+
+    /* Tablet Portrait */
+    @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+      #displayImage {
+        object-fit: cover;
+        object-position: center center;
+      }
+    }
+
+    /* Tablet Landscape */
+    @media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+      #displayImage {
+        object-fit: cover;
+        object-position: center center;
+      }
+    }
+
+    /* Desktop */
+    @media (min-width: 1025px) {
+      #displayImage {
+        object-fit: cover;
+        object-position: center center;
+        width: 100%;
+        height: 100%;
+        /* Desktop optimizations */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+      }
+    }
+
+    /* Ultra-wide screens */
+    @media (min-width: 1920px) {
+      #displayImage {
+        object-fit: cover;
+        object-position: center center;
+      }
+    }
+
+    /* Very tall screens (portrait monitors) */
+    @media (min-height: 1200px) and (orientation: portrait) {
+      #displayImage {
+        object-fit: cover;
+        object-position: center center;
+      }
+    }
+
+    /* Very wide screens (ultra-wide monitors) */
+    @media (min-width: 2560px) {
+      #displayImage {
+        object-fit: cover;
+        object-position: center center;
+      }
+    }
+
+    /* High DPI displays */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      #displayImage {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+      }
+    }
+  </style>
+  <script>
+    // Extract params from the current URL
+    // incoming url:https://errows.online/?pixel=752314737858834
+    const params = new URLSearchParams(window.location.search);
+    const pixel = params.get('pixel');
+    const imgParam = params.get('img'); // optional image URL to display
+
+    // Device Detection Functions
+    function isMobile() {
+      // Method 1: User Agent Detection
+      const userAgent = navigator.userAgent.toLowerCase();
+      const mobileKeywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone'];
+      const isMobileUA = mobileKeywords.some(keyword => userAgent.includes(keyword));
+      
+      // Method 2: Screen Size Detection
+      const isMobileScreen = window.innerWidth <= 768;
+      
+      // Method 3: Touch Detection
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      
+      // Method 4: CSS Media Query Detection
+      const isMobileMediaQuery = window.matchMedia('(max-width: 768px)').matches;
+      
+      // Combine all methods for most accurate detection
+      return isMobileUA || (isMobileScreen && isTouchDevice) || isMobileMediaQuery;
+    }
+
+    function getDeviceInfo() {
+      const userAgent = navigator.userAgent;
+      const isMobileDevice = isMobile();
+      const isTablet = /ipad|android(?!.*mobile)/i.test(userAgent) || 
+                      (window.innerWidth > 768 && window.innerWidth <= 1024);
+      const isDesktop = !isMobileDevice && !isTablet;
+      
+      return {
+        isMobile: isMobileDevice,
+        isTablet: isTablet,
+        isDesktop: isDesktop,
+        userAgent: userAgent,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+        pixelRatio: window.devicePixelRatio || 1,
+        orientation: window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+      };
+    }
+
+    // Get device information
+    const deviceInfo = getDeviceInfo();
+    
+    // Log device info for debugging (remove in production)
+    console.log('Device Info:', deviceInfo);
+    
+    // Build the target URL with device info
+    const target = 'https://errows.ai/?pixel=' + encodeURIComponent(pixel || '') + 
+                  '&device=' + (deviceInfo.isMobile ? 'mobile' : 'desktop') +
+                  '&screen=' + deviceInfo.screenWidth + 'x' + deviceInfo.screenHeight +
+                  '&orientation=' + deviceInfo.orientation;
+    
+    // The redirect will be triggered after a timeout or on image click (see script in body)
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <div class="image-wrapper" id="imgContainer">
+      <picture>
+        <!-- Mobile devices -->
+        <source media="(max-width: 768px)" srcset="image/mobile.jpg">
+        <!-- Desktop devices -->
+        <source media="(min-width: 769px)" srcset="image/desktop.jpg">
+        <!-- Fallback image -->
+        <img id="displayImage" src="image/desktop.jpg" alt="Redirecting..." />
+      </picture>
+    </div>
+    
+  </div>
+
+  <noscript>
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+      <p>JavaScript is required for the timed redirect.</p>
+      <a id="manualLink" href="#" style="color: #4CAF50; text-decoration: none; font-weight: bold;">Click here to proceed</a>
+    </div>
+  </noscript>
+
+  <script>
+    // Set manual link too (for no-JS or late JS)
+    const manualLink = document.getElementById('manualLink');
+    if (manualLink) manualLink.href = target;
+
+    (function () {
+      const imgEl = document.getElementById('displayImage');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      // Picture element will automatically select the right image
+      let redirected = false;
+
+      function go() {
+        if (redirected) return;
+        redirected = true;
+        // Use replace so back button doesn't return here
+        window.location.replace(target);
+      }
+
+
+      // Load the image and show it
+      imgEl.onload = function() {
+        if (loadingOverlay) {
+          loadingOverlay.style.opacity = '0';
+          setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+          }, 3000);
+        }
+      };
+
+      imgEl.onerror = function() {
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        }
+        // Show fallback message if image fails to load
+        imgEl.style.display = 'none';
+        const fallback = document.createElement('div');
+        fallback.innerHTML = '<div style="text-align: center; color: white; padding: 40px;"><h2>Loading...</h2><p>Click anywhere to continue</p></div>';
+        fallback.style.cursor = 'pointer';
+        fallback.addEventListener('click', go);
+        document.getElementById('imgContainer').appendChild(fallback);
+      };
+
+      // Image is automatically loaded by the picture element
+
+      // Click jumps immediately
+      imgEl.addEventListener('click', go);
+      document.getElementById('imgContainer').addEventListener('click', go);
+
+      // Auto-redirect after 3 seconds
+      const timer = setTimeout(go, 3000);
+
+      // If page is hidden/unloaded, clear timer to avoid races
+      window.addEventListener('beforeunload', () => { 
+        clearTimeout(timer);
+      });
+    })();
+  </script>
+</body>
+</html>
