@@ -204,7 +204,7 @@
     // incoming url:https://errows.online/?pixel=752314737858834
     const params = new URLSearchParams(window.location.search);
     const pixel = params.get('pixel');
-    const imgParam = params.get('img'); // optional image URL to display
+    // const imgParam = params.get('img'); 
 
     // Device Detection Functions
     function isMobile() {
@@ -251,11 +251,9 @@
     // Log device info for debugging (remove in production)
     console.log('Device Info:', deviceInfo);
     
-    // Build the target URL with device info
-    const target = 'https://errows.ai/?pixel=' + encodeURIComponent(pixel || '') + 
-                  '&device=' + (deviceInfo.isMobile ? 'mobile' : 'desktop') +
-                  '&screen=' + deviceInfo.screenWidth + 'x' + deviceInfo.screenHeight +
-                  '&orientation=' + deviceInfo.orientation;
+  // Build the target URL with pixel and device type only
+  const target = 'https://errows.ai/?pixel=' + encodeURIComponent(pixel || '') +
+          '&device=' + (deviceInfo.isMobile ? 'mobile' : 'desktop');
     
     // The redirect will be triggered after a timeout or on image click (see script in body)
   </script>
@@ -334,8 +332,8 @@
       imgEl.addEventListener('click', go);
       document.getElementById('imgContainer').addEventListener('click', go);
 
-      // Auto-redirect after 3 seconds
-      const timer = setTimeout(go, 3000);
+  // Auto-redirect after 5 seconds
+  const timer = setTimeout(go, 5000);
 
       // If page is hidden/unloaded, clear timer to avoid races
       window.addEventListener('beforeunload', () => { 
