@@ -58,9 +58,12 @@
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
       will-change: transform;
-      /* Image quality optimizations */
-      image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
+      /* Image quality optimizations - high quality rendering */
+      image-rendering: auto;
+      image-rendering: smooth;
+      image-rendering: -webkit-optimize-contrast; /* Legacy support */
+      /* High quality image scaling */
+      -ms-interpolation-mode: bicubic;
       /* Prevent image dragging and selection */
       -webkit-user-drag: none;
       -khtml-user-drag: none;
@@ -162,8 +165,8 @@
         /* Desktop optimizations */
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
+        image-rendering: auto;
+        image-rendering: smooth;
       }
     }
 
@@ -191,11 +194,14 @@
       }
     }
 
-    /* High DPI displays */
+    /* High DPI displays (Retina, HiDPI, 4K) */
     @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
       #displayImage {
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
+        image-rendering: auto;
+        image-rendering: smooth;
+        /* Ensure full quality for high-resolution displays */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
     }
   </style>
@@ -253,7 +259,7 @@
     const deviceInfo = getDeviceInfo();
     
     // Build the target URL with all parameters
-    const target = 'https://www.errows.online/?' + 
+    const target = 'https://errows.ai/character/generate/?' + 
       's=' + encodeURIComponent(s || '') +
       '&c=' + encodeURIComponent(c || '') +
       '&g=' + encodeURIComponent(g || '') +
@@ -278,12 +284,14 @@
     
     <div class="image-wrapper" id="imgContainer">
       <picture>
-        <!-- Mobile devices -->
-        <source media="(max-width: 768px)" srcset="image/mobile.jpg">
-        <!-- Desktop devices -->
-        <source media="(min-width: 769px)" srcset="image/desktop.jpg">
+        <!-- Mobile devices - high resolution for retina screens -->
+        <source media="(max-width: 768px)" srcset="image/mobile.jpg 1x, image/mobile.jpg 2x">
+        <!-- Tablet devices -->
+        <source media="(min-width: 769px) and (max-width: 1024px)" srcset="image/desktop.jpg 1x, image/desktop.jpg 2x">
+        <!-- Desktop devices - full resolution -->
+        <source media="(min-width: 1025px)" srcset="image/desktop.jpg 1x, image/desktop.jpg 2x">
         <!-- Fallback image -->
-        <img id="displayImage" src="image/desktop.jpg" alt="Redirecting..." />
+        <img id="displayImage" src="image/desktop.jpg" alt="Redirecting..." loading="eager" decoding="sync" />
       </picture>
     </div>
     
@@ -316,8 +324,16 @@
       }
 
 
+      // Force high quality image loading
+      imgEl.loading = 'eager'; // Load immediately for better quality
+      imgEl.decoding = 'sync'; // Synchronous decoding for immediate display
+      
       // Load the image and show it
       imgEl.onload = function() {
+        console.log('Image loaded:', imgEl.naturalWidth + 'x' + imgEl.naturalHeight);
+        console.log('Display size:', imgEl.width + 'x' + imgEl.height);
+        console.log('Pixel ratio:', window.devicePixelRatio);
+        
         if (loadingOverlay) {
           loadingOverlay.style.opacity = '0';
           setTimeout(() => {
