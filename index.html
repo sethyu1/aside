@@ -261,15 +261,28 @@
     const deviceInfo = getDeviceInfo();
     
     // Build the target URL - preserve original query string exactly and add device parameter
-    const targetParams = new URLSearchParams(originalParams);
+    // Manually preserve empty values by checking if parameter exists in original URL
+    const originalQueryString = window.location.search;
+    const targetParams = new URLSearchParams();
+    
+    // Copy all original parameters, preserving empty values
+    originalParams.forEach((value, key) => {
+      // If value is null or empty string, preserve it as empty
+      targetParams.set(key, value === null ? '' : value);
+    });
+    
+    // Add device parameter
     targetParams.set('device', deviceInfo.isMobile ? 'mobile' : 'desktop');
     
     const target = 'https://www.firestai.org/?' + targetParams.toString();
     
     // Log device info and parameters for debugging (remove in production)
+    console.log('Original URL:', window.location.href);
+    console.log('Original Query String:', originalQueryString);
     console.log('Device Info:', deviceInfo);
     console.log('Extracted Parameters:', { s, c, g, ad, acc, pixel });
     console.log('Target URL:', target);
+    console.log('Target Params toString:', targetParams.toString());
     
     // The redirect will be triggered after a timeout or on image click (see script in body)
   </script>
