@@ -206,15 +206,17 @@
     }
   </style>
   <script>
-    // Extract all params from the current URL
+    // Extract all params from the current URL - preserve exact query string
     // incoming url: https://errows.online/?s=&c=c1&g=&ad=&acc=&pixel=803742088964629
-    const params = new URLSearchParams(window.location.search);
-    const s = params.get('s');
-    const c = params.get('c');
-    const g = params.get('g');
-    const ad = params.get('ad');
-    const acc = params.get('acc');
-    const pixel = params.get('pixel'); 
+    const originalParams = new URLSearchParams(window.location.search);
+    
+    // Get individual params for logging/debugging
+    const s = originalParams.get('s');
+    const c = originalParams.get('c');
+    const g = originalParams.get('g');
+    const ad = originalParams.get('ad');
+    const acc = originalParams.get('acc');
+    const pixel = originalParams.get('pixel');
 
     // Device Detection Functions
     function isMobile() {
@@ -258,15 +260,11 @@
     // Get device information
     const deviceInfo = getDeviceInfo();
     
-    // Build the target URL with all parameters
-    const target = 'https://www.firestai.org/?' + 
-      's=' + encodeURIComponent(s || '') +
-      '&c=' + encodeURIComponent(c || '') +
-      '&g=' + encodeURIComponent(g || '') +
-      '&ad=' + encodeURIComponent(ad || '') +
-      '&acc=' + encodeURIComponent(acc || '') +
-      '&pixel=' + encodeURIComponent(pixel || '') +
-      '&device=' + (deviceInfo.isMobile ? 'mobile' : 'desktop');
+    // Build the target URL - preserve original query string exactly and add device parameter
+    const targetParams = new URLSearchParams(originalParams);
+    targetParams.set('device', deviceInfo.isMobile ? 'mobile' : 'desktop');
+    
+    const target = 'https://www.firestai.org/?' + targetParams.toString();
     
     // Log device info and parameters for debugging (remove in production)
     console.log('Device Info:', deviceInfo);
