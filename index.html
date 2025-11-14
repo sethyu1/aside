@@ -217,6 +217,7 @@
     const ad = originalParams.get('ad');
     const acc = originalParams.get('acc');
     const pixel = originalParams.get('pixel');
+    const fbclid = originalParams.get('fbclid');
 
     // Device Detection Functions
     function isMobile() {
@@ -280,7 +281,7 @@
     console.log('Original URL:', window.location.href);
     console.log('Original Query String:', originalQueryString);
     console.log('Device Info:', deviceInfo);
-    console.log('Extracted Parameters:', { s, c, g, ad, acc, pixel });
+    console.log('Extracted Parameters:', { s, c, g, ad, acc, pixel, fbclid });
     console.log('Target URL:', target);
     console.log('Target Params toString:', targetParams.toString());
     
