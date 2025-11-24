@@ -275,7 +275,7 @@
     // Add device parameter
     targetParams.set('device', deviceInfo.isMobile ? 'mobile' : 'desktop');
     
-    const target = 'https://www.firestai.org/character/generate?' + targetParams.toString();
+    const target = 'https://www.firestai.org/character/generate/?' + targetParams.toString();
     
     // Log device info and parameters for debugging (remove in production)
     console.log('Original URL:', window.location.href);
