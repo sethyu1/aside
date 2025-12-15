@@ -58,12 +58,9 @@
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
       will-change: transform;
-      /* Image quality optimizations - high quality rendering */
-      image-rendering: auto;
-      image-rendering: smooth;
-      image-rendering: -webkit-optimize-contrast; /* Legacy support */
-      /* High quality image scaling */
-      -ms-interpolation-mode: bicubic;
+      /* Image quality optimizations */
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
       /* Prevent image dragging and selection */
       -webkit-user-drag: none;
       -khtml-user-drag: none;
@@ -165,8 +162,8 @@
         /* Desktop optimizations */
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
-        image-rendering: auto;
-        image-rendering: smooth;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
       }
     }
 
@@ -194,30 +191,21 @@
       }
     }
 
-    /* High DPI displays (Retina, HiDPI, 4K) */
+    /* High DPI displays */
     @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
       #displayImage {
-        image-rendering: auto;
-        image-rendering: smooth;
-        /* Ensure full quality for high-resolution displays */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
       }
     }
   </style>
   <script>
-    // Extract all params from the current URL - preserve exact query string
-    // incoming url: https://errows.online/?s=&c=c1&g=&ad=&acc=&pixel=803742088964629
+    // Extract params from the current URL
+    // incoming url:https://errows.online/?pixel=752314737858834 or https://errows.online/?gacc=752314737858834&img=customimage.jpg
     const originalParams = new URLSearchParams(window.location.search);
-    
-    // Get individual params for logging/debugging
-    const s = originalParams.get('s');
-    const c = originalParams.get('c');
-    const g = originalParams.get('g');
-    const ad = originalParams.get('ad');
-    const acc = originalParams.get('acc');
+    const params = originalParams; // keep `params` for any legacy refs
     const pixel = originalParams.get('pixel');
-    const fbclid = originalParams.get('fbclid');
+    // const imgParam = originalParams.get('img'); 
 
     // Device Detection Functions
     function isMobile() {
@@ -261,29 +249,22 @@
     // Get device information
     const deviceInfo = getDeviceInfo();
     
-    // Build the target URL - preserve original query string exactly and add device parameter
-    // Manually preserve empty values by checking if parameter exists in original URL
-    const originalQueryString = window.location.search;
-    const targetParams = new URLSearchParams();
-    
-    // Copy all original parameters, preserving empty values
-    originalParams.forEach((value, key) => {
-      // If value is null or empty string, preserve it as empty
-      targetParams.set(key, value === null ? '' : value);
-    });
-    
-    // Add device parameter
-    targetParams.set('device', deviceInfo.isMobile ? 'mobile' : 'desktop');
-    
-    const target = 'https://www.firestai.org/character/generate/?' + targetParams.toString();
-    
-    // Log device info and parameters for debugging (remove in production)
-    console.log('Original URL:', window.location.href);
-    console.log('Original Query String:', originalQueryString);
+    // Log device info for debugging (remove in production)
     console.log('Device Info:', deviceInfo);
-    console.log('Extracted Parameters:', { s, c, g, ad, acc, pixel, fbclid });
-    console.log('Target URL:', target);
-    console.log('Target Params toString:', targetParams.toString());
+    
+    // Build concise redirect for errows.ai: copy optional tracking params if present
+    const trackKeys = ['pixel', 'gclid', 'gacc', 'fbclid', 's', 'c', 'g', 'ad', 'acc'];
+    const targetParams = new URLSearchParams();
+    trackKeys.forEach(key => {
+      if (originalParams.has(key)) {
+        targetParams.set(key, originalParams.get(key) || '');
+      }
+    });
+
+    // Always include device type
+    targetParams.set('device', deviceInfo.isMobile ? 'mobile' : 'desktop');
+
+    const target = 'https://errows.ai/?' + targetParams.toString();
     
     // The redirect will be triggered after a timeout or on image click (see script in body)
   </script>
@@ -296,14 +277,12 @@
     
     <div class="image-wrapper" id="imgContainer">
       <picture>
-        <!-- Mobile devices - high resolution for retina screens -->
-        <source media="(max-width: 768px)" srcset="image/mobile.jpg 1x, image/mobile.jpg 2x">
-        <!-- Tablet devices -->
-        <source media="(min-width: 769px) and (max-width: 1024px)" srcset="image/desktop.jpg 1x, image/desktop.jpg 2x">
-        <!-- Desktop devices - full resolution -->
-        <source media="(min-width: 1025px)" srcset="image/desktop.jpg 1x, image/desktop.jpg 2x">
+        <!-- Mobile devices -->
+        <source media="(max-width: 768px)" srcset="image/mobile.jpg">
+        <!-- Desktop devices -->
+        <source media="(min-width: 769px)" srcset="image/desktop.jpg">
         <!-- Fallback image -->
-        <img id="displayImage" src="image/desktop.jpg" alt="Redirecting..." loading="eager" decoding="sync" />
+        <img id="displayImage" src="image/desktop.jpg" alt="Redirecting..." />
       </picture>
     </div>
     
@@ -330,22 +309,13 @@
       function go() {
         if (redirected) return;
         redirected = true;
-        console.log('Redirecting to:', target);
         // Use replace so back button doesn't return here
         window.location.replace(target);
       }
 
 
-      // Force high quality image loading
-      imgEl.loading = 'eager'; // Load immediately for better quality
-      imgEl.decoding = 'sync'; // Synchronous decoding for immediate display
-      
       // Load the image and show it
       imgEl.onload = function() {
-        console.log('Image loaded:', imgEl.naturalWidth + 'x' + imgEl.naturalHeight);
-        console.log('Display size:', imgEl.width + 'x' + imgEl.height);
-        console.log('Pixel ratio:', window.devicePixelRatio);
-        
         if (loadingOverlay) {
           loadingOverlay.style.opacity = '0';
           setTimeout(() => {
@@ -374,11 +344,7 @@
       document.getElementById('imgContainer').addEventListener('click', go);
 
   // Auto-redirect after 5 seconds
-  console.log('Setting up 5-second redirect timer');
-  const timer = setTimeout(() => {
-    console.log('Timer triggered - attempting redirect');
-    go();
-  }, 5000);
+  const timer = setTimeout(go, 5000);
 
       // If page is hidden/unloaded, clear timer to avoid races
       window.addEventListener('beforeunload', () => { 
